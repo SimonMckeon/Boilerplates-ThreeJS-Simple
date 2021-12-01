@@ -63,18 +63,6 @@ export default class Application {
         })
         this.renderer.setSize(this.sizes.width, this.sizes.height)
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-        if (this.debug.active) {
-            // We can't update the color values in threeJS directly as it needs to be a THREE.Color class instance.
-            // We create a dummy config that is simply used for dat.gui to have something to attach to, but we update
-            // the actual color in the onChange callback to a new THREE.Color instance.
-            // This will be done a lot as you're building out debug UIs, so this is just here to serve as an example :)
-            const params = { clearColor: 0x000000 }
-            const folder = this.debug.ui.addFolder("Renderer")
-            folder.addColor(params, "clearColor").onChange(() => {
-                this.renderer.setClearColor(new Color(params.clearColor))
-            })
-        }
     }
 
     setCamera() {
