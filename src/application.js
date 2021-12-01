@@ -1,4 +1,5 @@
-import { BoxBufferGeometry, Clock, Color, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from "three"
+import { Clock, Color, PerspectiveCamera, Scene, WebGLRenderer } from "three"
+import Stats from "three/examples/jsm/libs/stats.module"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import { GUI } from "dat.gui"
 
@@ -12,22 +13,19 @@ export default class Application {
         }
         window.addEventListener("resize", this.onResize.bind(this), false)
 
-        // Set up dat.gui debug panels
+        // Set up debug
         this.setDebug()
-        
+        this.setStats()
+
         // Set up basic scene
         this.setRenderer()
         this.scene = new Scene()
         this.setCamera()
+
+        // Orbit controls
         this.setControls()
 
-        // Set up demo cube
-        this.cube = new Mesh(
-            new BoxBufferGeometry(1, 1, 1),
-            new MeshBasicMaterial({ color: 0xffffff })
-        )
-        this.scene.add(this.cube)
-
+        // Loop
         this.setClock()
         this.update()
     }
@@ -42,8 +40,6 @@ export default class Application {
     }
 
     setDebug() {
-        // We only want to show the debug panel if the #debug hash is included
-        // in the URL. I like to leave this on in production because sharing is caring
         this.debug = {
             active: window.location.hash === "#debug",
         }
@@ -52,15 +48,12 @@ export default class Application {
         }
     }
 
-    setCamera() {
-        this.camera = new PerspectiveCamera(
-            75,
-            this.sizes.width / this.sizes.height,
-            0.1,
-            100
-        )
-        this.camera.position.set(0, 0, 2)
-        this.scene.add(this.camera)
+    setStats() {
+        if (this.debug.active) {
+            this.stats = new Stats()
+            this.stats.showPanel(0)
+            document.body.appendChild(this.stats.dom)
+        }
     }
 
     setRenderer() {
@@ -84,28 +77,47 @@ export default class Application {
         }
     }
 
+    setCamera() {
+        this.camera = new PerspectiveCamera(
+            75,
+            this.sizes.width / this.sizes.height,
+            0.1,
+            100
+        )
+        this.camera.position.set(0, 0, 2)
+        this.scene.add(this.camera)
+    }
+
+    setControls() {
+        if (this.debug.active) {
+            this.controls = new OrbitControls(this.camera, this.canvas)
+            this.controls.enableDamping = true
+        }
+    }
+
     setClock() {
         this.clock = new Clock()
         this.elapsedTime = 0
     }
 
-    setControls() {
-        this.controls = new OrbitControls(this.camera, this.canvas)
-        this.controls.enableDamping = true
-    }
-
     update() {
+        if (this.debug.active && this.stats) {
+            this.stats.begin()
+        }
+
         const elapsedTime = this.clock.getElapsedTime()
         const delta = elapsedTime - this.elapsedTime
         this.elapsedTime = elapsedTime
 
-        // Rotate our cube
-        this.cube.rotation.y += delta * 1
-
-        // Update orbit controls
-        this.controls.update()
+        if (this.controls) {
+            this.controls.update()
+        }
 
         this.renderer.render(this.scene, this.camera)
+
+        if (this.debug.active && this.stats) {
+            this.stats.end()
+        }
 
         window.requestAnimationFrame(this.update.bind(this))
     }
